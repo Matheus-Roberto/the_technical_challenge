@@ -99,7 +99,7 @@ func (c *postServiceClient) DownVote(ctx context.Context, in *DownVoteRequest, o
 }
 
 // PostServiceServer is the server API for PostService service.
-// All implementations must embed UnimplementedPostServiceServer
+// All implementations should embed UnimplementedPostServiceServer
 // for forward compatibility
 type PostServiceServer interface {
 	CreatePost(context.Context, *CreatePostRequest) (*CreatePostResponse, error)
@@ -109,10 +109,9 @@ type PostServiceServer interface {
 	ListPost(context.Context, *ListPostRequest) (*ListPostResponse, error)
 	UpVote(context.Context, *UpVoteRequest) (*UpVoteResponse, error)
 	DownVote(context.Context, *DownVoteRequest) (*DownVoteResponse, error)
-	mustEmbedUnimplementedPostServiceServer()
 }
 
-// UnimplementedPostServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedPostServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedPostServiceServer struct {
 }
 
@@ -137,7 +136,6 @@ func (UnimplementedPostServiceServer) UpVote(context.Context, *UpVoteRequest) (*
 func (UnimplementedPostServiceServer) DownVote(context.Context, *DownVoteRequest) (*DownVoteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DownVote not implemented")
 }
-func (UnimplementedPostServiceServer) mustEmbedUnimplementedPostServiceServer() {}
 
 // UnsafePostServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to PostServiceServer will
