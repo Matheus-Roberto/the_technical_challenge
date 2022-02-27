@@ -25,7 +25,7 @@ var mongoCtx context.Context
 var db *mongo.Client
 var postDB *mongo.Collection
 
-func (s *PostServiceServer) CreatePost(ctx context.Context, request *pb.CreatePostRequest) (*pb.CreatePostResponse, error) {
+func (server *PostServiceServer) CreatePost(ctx context.Context, request *pb.CreatePostRequest) (*pb.CreatePostResponse, error) {
 
 	post := request.GetPost()
 
@@ -53,7 +53,7 @@ func (s *PostServiceServer) CreatePost(ctx context.Context, request *pb.CreatePo
 	return &pb.CreatePostResponse{Post: post}, nil
 }
 
-func (s *PostServiceServer) DeletePost(ctx context.Context, request *pb.DeletePostRequest) (*pb.DeletePostResponse, error) {
+func (server *PostServiceServer) DeletePost(ctx context.Context, request *pb.DeletePostRequest) (*pb.DeletePostResponse, error) {
 	oid, err := primitive.ObjectIDFromHex(request.GetId())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Could not convert to ObjectId: %v", err))
@@ -73,7 +73,7 @@ func (s *PostServiceServer) DeletePost(ctx context.Context, request *pb.DeletePo
 	}, nil
 }
 
-func (s *PostServiceServer) GetPost(ctx context.Context, request *pb.GetPostRequest) (*pb.GetPostResponse, error) {
+func (server *PostServiceServer) GetPost(ctx context.Context, request *pb.GetPostRequest) (*pb.GetPostResponse, error) {
 	oid, err := primitive.ObjectIDFromHex(request.GetId())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Could not convert to ObjectId: %v", err))
@@ -98,7 +98,7 @@ func (s *PostServiceServer) GetPost(ctx context.Context, request *pb.GetPostRequ
 	return response, nil
 }
 
-func (s *PostServiceServer) ListPost(ctx context.Context, request *pb.ListPostRequest) (*pb.ListPostResponse, error) {
+func (server *PostServiceServer) ListPost(ctx context.Context, request *pb.ListPostRequest) (*pb.ListPostResponse, error) {
 
 	filter := bson.M{}
 	data := []*pb.Post{}
@@ -124,7 +124,7 @@ func (s *PostServiceServer) ListPost(ctx context.Context, request *pb.ListPostRe
 	}, nil
 }
 
-func (s *PostServiceServer) UpdatePost(ctx context.Context, request *pb.UpdatePostRequest) (*pb.UpdatePostResponse, error) {
+func (server *PostServiceServer) UpdatePost(ctx context.Context, request *pb.UpdatePostRequest) (*pb.UpdatePostResponse, error) {
 
 	post := request.GetPost()
 
@@ -137,8 +137,9 @@ func (s *PostServiceServer) UpdatePost(ctx context.Context, request *pb.UpdatePo
 	}
 
 	update := bson.M{
-		"title":   post.GetTitle(),
-		"content": post.GetContent(),
+		"title":   	post.GetTitle(),
+		"content": 	post.GetContent(),
+		"user":		post.GetUser(),
 	}
 
 	filter := bson.M{"_id": oid}
@@ -155,15 +156,16 @@ func (s *PostServiceServer) UpdatePost(ctx context.Context, request *pb.UpdatePo
 	}
 	return &pb.UpdatePostResponse{
 		Post: &pb.Post{
-			Id:      decoded.Id.Hex(),
-			Title:   decoded.Title,
-			Content: decoded.Content,
-			Votes:   decoded.Votes,
+			Id:      	decoded.Id.Hex(),
+			Title:   	decoded.Title,
+			Content: 	decoded.Content,
+			User:		decoded.User,
+			Votes:   	decoded.Votes,
 		},
 	}, nil
 }
 
-func (s *PostServiceServer) UpVote(ctx context.Context, request *pb.UpVoteRequest) (*pb.UpVoteResponse, error) {
+func (server *PostServiceServer) UpVote(ctx context.Context, request *pb.UpVoteRequest) (*pb.UpVoteResponse, error) {
 	post := request.GetPost()
 	oid, err := primitive.ObjectIDFromHex(post.GetId())
 
@@ -188,15 +190,16 @@ func (s *PostServiceServer) UpVote(ctx context.Context, request *pb.UpVoteReques
 	}
 	return &pb.UpVoteResponse{
 		Post: &pb.Post{
-			Id:      decoded.Id.Hex(),
-			Title:   decoded.Title,
-			Content: decoded.Content,
-			Votes:   decoded.Votes,
+			Id:      	decoded.Id.Hex(),
+			Title:   	decoded.Title,
+			Content: 	decoded.Content,
+			User:		decoded.User,
+			Votes:   	decoded.Votes,
 		},
 	}, nil
 }
 
-func (s *PostServiceServer) DownVote(ctx context.Context, request *pb.DownVoteRequest) (*pb.DownVoteResponse, error) {
+func (server *PostServiceServer) DownVote(ctx context.Context, request *pb.DownVoteRequest) (*pb.DownVoteResponse, error) {
 
 	post := request.GetPost()
 
@@ -222,10 +225,11 @@ func (s *PostServiceServer) DownVote(ctx context.Context, request *pb.DownVoteRe
 	}
 	return &pb.DownVoteResponse{
 		Post: &pb.Post{
-			Id:      decoded.Id.Hex(),
-			Title:   decoded.Title,
-			Content: decoded.Content,
-			Votes:   decoded.Votes,
+			Id:      	decoded.Id.Hex(),
+			Title:   	decoded.Title,
+			Content: 	decoded.Content,
+			User:		decoded.User,
+			Votes:   	decoded.Votes,
 		},
 	}, nil
 }
@@ -267,16 +271,16 @@ func main() {
 	}()
 	fmt.Println("Server succesfully started on port :5000")
 
-	c := make(chan os.Signal)
+	ch := make(chan os.Signal)
 
-	signal.Notify(c, os.Interrupt)
+	signal.Notify(ch, os.Interrupt)
 
-	<-c
+	<-ch
 
 	fmt.Println("\nStopping the server...")
 	grpcServer.Stop()
 	listener.Close()
-	fmt.Println("Closing MongoDB connection")
+	fmt.Println("Closing MongoDB connection...")
 	db.Disconnect(mongoCtx)
 	fmt.Println("Done.")
 }

@@ -13,127 +13,127 @@ func main() {
 
 	conn, err := grpc.Dial("localhost:5000", grpc.WithInsecure())
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		log.Fatalf("could not connect: %v", err)
 	}
 	defer conn.Close()
 
 	client := pb.NewPostServiceClient(conn)
 
-	r := gin.Default()
+	request := gin.Default()
 
-	r.POST("create", func(c *gin.Context) {
+	request.POST("create", func(context *gin.Context) {
 		post := pb.Post{}
 
-		if err := c.ShouldBindJSON(&post); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "Missing values"})
+		if err := context.ShouldBindJSON(&post); err != nil {
+			context.JSON(http.StatusBadRequest, gin.H{"message": "Missing values"})
 			return
 		}
 
 		req := &pb.CreatePostRequest{
 			Post: &post,
 		}
-		res, err := client.CreatePost(c, req)
+		res, err := client.CreatePost(context, req)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
+			context.JSON(http.StatusNotFound, gin.H{
 				"error": err.Error(),
 			})
 			return
 		}
 
-		c.JSON(http.StatusOK, res.Post)
+		context.JSON(http.StatusOK, res.Post)
 	})
 
-	r.GET("/post/:id", func(c *gin.Context) {
-		id := c.Param("id")
+	request.GET("/post/:id", func(context *gin.Context) {
+		id := context.Param("id")
 
 		req := &pb.GetPostRequest{Id: id}
-		res, err := client.GetPost(c, req)
+		res, err := client.GetPost(context, req)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
+			context.JSON(http.StatusNotFound, gin.H{
 				"error": err.Error(),
 			})
 			return
 		}
 
-		c.JSON(http.StatusOK, res.Post)
+		context.JSON(http.StatusOK, res.Post)
 	})
 
-	r.GET("/all/post/", func(c *gin.Context) {
+	request.GET("/all/post/", func(context *gin.Context) {
 
 		req := &pb.ListPostRequest{}
-		res, err := client.ListPost(c, req)
+		res, err := client.ListPost(context, req)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
+			context.JSON(http.StatusNotFound, gin.H{
 				"error": err.Error(),
 			})
 			return
 		}
-		c.JSON(http.StatusOK, res)
+		context.JSON(http.StatusOK, res)
 	})
 
-	r.DELETE("/post/:id", func(c *gin.Context) {
-		id := c.Param("id")
+	request.DELETE("/post/:id", func(context *gin.Context) {
+		id := context.Param("id")
 
 		req := &pb.DeletePostRequest{Id: id}
-		res, err := client.DeletePost(c, req)
+		res, err := client.DeletePost(context, req)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
+			context.JSON(http.StatusNotFound, gin.H{
 				"error": err.Error(),
 			})
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{
+		context.JSON(http.StatusOK, gin.H{
 			"Id:":           id,
 			"Post deleted:": res.Success,
 		})
 
 	})
 
-	r.PUT("/update/post/", func(c *gin.Context) {
+	request.PUT("/update/post/", func(context *gin.Context) {
 		post := pb.Post{}
 
-		if err := c.ShouldBindJSON(&post); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "Missing values"})
+		if err := context.ShouldBindJSON(&post); err != nil {
+			context.JSON(http.StatusBadRequest, gin.H{"message": "Missing values"})
 			return
 		}
 
 		req := &pb.UpdatePostRequest{
 			Post: &post,
 		}
-		res, err := client.UpdatePost(c, req)
+		res, err := client.UpdatePost(context, req)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
+			context.JSON(http.StatusNotFound, gin.H{
 				"error": err.Error(),
 			})
 			return
 		}
 
-		c.JSON(http.StatusOK, res.Post)
+		context.JSON(http.StatusOK, res.Post)
 	})
 
-	r.PUT("/post/upvote", func(c *gin.Context) {
+	request.PUT("/post/upvote", func(context *gin.Context) {
 		post := pb.Post{}
-		if err := c.ShouldBindJSON(&post); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "Missing values"})
+		if err := context.ShouldBindJSON(&post); err != nil {
+			context.JSON(http.StatusBadRequest, gin.H{"message": "Missing values"})
 			return
 		}
 		req := &pb.UpVoteRequest{
 			Post: &post,
 		}
 
-		res, err := client.UpVote(c, req)
+		res, err := client.UpVote(context, req)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
+			context.JSON(http.StatusNotFound, gin.H{
 				"error": err.Error(),
 			})
 			return
 		}
 
-		c.JSON(http.StatusOK, res.Post)
+		context.JSON(http.StatusOK, res.Post)
 	})
 
-	r.PUT("/post/downvote", func(c *gin.Context) {
+	request.PUT("/post/downvote", func(c *gin.Context) {
 		post := pb.Post{}
 
 		if err := c.ShouldBindJSON(&post); err != nil {
@@ -147,7 +147,7 @@ func main() {
 
 		res, err := client.DownVote(c, req)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
+			c.JSON(http.StatusNotFound, gin.H{
 				"error": err.Error(),
 			})
 			return
@@ -156,7 +156,7 @@ func main() {
 		c.JSON(http.StatusOK, res.Post)
 	})
 
-	if err := r.Run(":8052"); err != nil {
+	if err := request.Run(":8052"); err != nil {
 		log.Fatalf("could not run server: %v", err)
 	}
 }
