@@ -20,7 +20,6 @@ import (
 )
 
 type PostServiceServer struct {}
-type UnimplementedFuncStruct struct{}
 
 var mongoCtx context.Context
 var db *mongo.Client
@@ -259,6 +258,8 @@ func main() {
 		fmt.Println("Connected to Mongodb")
 	}
 
+	postDB = db.Database("redditdb").Collection("post")
+
 	go func() {
 		if err := grpcServer.Serve(listener); err != nil {
 			log.Fatalf("Failed to serve: %v", err)
@@ -271,6 +272,7 @@ func main() {
 	signal.Notify(c, os.Interrupt)
 
 	<-c
+
 	fmt.Println("\nStopping the server...")
 	grpcServer.Stop()
 	listener.Close()
